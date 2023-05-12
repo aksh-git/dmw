@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Your Bag - DesignMyWear</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/bootstrap-responsive.min.css" rel="stylesheet">
+    <script src="../js/bag.js"></script>
+</head>
+<body>
+    <div class="container">
+		<section id="typography">
+		  <div style="display: flex;justify-content: space-between;align-items: center;border-bottom-color: #3aa8e8;" class="page-header">
+		    <h1>My Bag - DesignMyWear</h1>
+			<div>
+                <button onclick="javascript:window.location.replace('../')" type="button" class="btn btn-large btn-primary"><i class="icon-arrow-left icon-white"></i> Go back</button>
+            </div>
+
+		  </div>
+        </section>
+        <div class="row">
+            <div class="span5" id="formArea">
+                <div style="display: flex;justify-content: center;" class="well">
+                    <form onsubmit="event.preventDefault();placeOrder(event)">
+                        <h6 style="margin-top: 0;">Complete the form to place order.</h6>
+                        <h5 style="margin-top: 0;">* Personal details</h5>
+                        <div class="form-group">
+                            <label for="orderName">Full Name:</label>
+                            <input style="width:350px;" type="text" class="form-control" id="orderName" aria-describedby="emailHelp" placeholder="Enter your full name" required><br>                         
+                        </div>
+                        <div class="form-group">
+                            <label for="orderEmail1">Contact Email:</label>
+                            <input style="width:350px;" type="email" class="form-control" id="orderEmail1" aria-describedby="emailHelp" placeholder="Enter your email" required><br>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Contact Phone:</label>
+                            <input minlength="10" style="width:350px;" type="tel" class="form-control" id="phone"  placeholder="Enter your phone number" required><br>                         
+                        </div>
+                        <h5>* Residential Address:</h5>
+                        <div class="form-group">
+                            <textarea minlength="10" style="width:350px;resize: none;" type="text" class="form-control" id="completeAdrress" placeholder="Enter your full address" required></textarea>                         
+                        </div>
+                        <div class="form-group">
+                            <label for="zipcode">Zipcode</label>
+                            <input style="width:350px;" type="number" class="form-control" id="zipcode"  placeholder="Enter your zip code" required min="0" minlength="6" ><br>                         
+                        </div>
+                        <h5>* Order Description/instrucions</h5>
+                        <div class="form-group">
+                            <textarea minlength="10" style="width:350px;resize: none;" type="text" class="form-control" id="completeAdrress" placeholder="Description of the order or any other instrucions." required></textarea>                         
+                        </div>
+                        <div style="display: flex;justify-content: space-between; align-items: end;" >
+                            <h6 style="margin-top: 0;">Complete the form to place order.</h6>
+                            <button type="submit" class="btn btn-large btn-success"><i class="icon-tags icon-white"></i> Place order</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="span7">
+                <div class="well">
+                    <h4 style="margin-top: 0;"><i class="icon-tag"></i> Bag contents:</h4>
+                    <div>
+                        <table class="table" id="bag_items">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/bootstrap.min.js"></script>  
+
+    <script>
+        window.onload = () =>{
+            loadBagItems()
+        }
+        function loadBagItems(){
+            let bag = getBag()
+            let bagitems = bag.items;
+            if(bagitems.length>0){
+                document.getElementById("bag_items").innerHTML='';
+                displayBagItem(bagitems);
+            }else{
+                document.getElementById("bag_items").innerHTML=`<tr><strong>No items in the bag.</strong></tr>`;
+                document.getElementById("formArea").innerHTML=''
+            }
+        }
+        function displayBagItem(item){
+            let bagtable = document.getElementById("bag_items");
+            let items = '<tr><th><strong>Product Size</strong></th><th><strong>Quantity</strong></th><th><strong>Price</strong></th><th><strong>Total</strong></th></tr>'
+            let totalPrice = 0;
+            item.map((elem)=>{
+                var key = Object.keys(elem)[0]
+                items += `<tr>
+                    <td>${key}</td>
+                    <td>${elem[key]}</td>
+                    <td>${ITEMS_PRICE[key]} x ${elem[key]}</td>
+                    <td>${ITEMS_PRICE[key]*elem[key]} ₨.</td>
+                </tr>`;
+                totalPrice = totalPrice + (ITEMS_PRICE[key]*elem[key]);
+            })
+            items += `<tr>
+                <td><strong>Total Amount: </strong></td>
+                <td></td>
+                <td></td>
+                <td><strong>${totalPrice} ₨.</strong></td>
+            </tr>`
+            bagtable.innerHTML=items;
+        }
+        async function placeOrder(e){
+            try {
+                const mailformat = /^w+([.-]?w+)*@w+([.-]?w+)*(.w{2,3})+$/;
+                let bag = getBag()
+                const full_name = e.target[0].value;
+                const email = e.target[1].value;
+                const phone = e.target[2].value;
+                const full_address = e.target[3].value;
+                const zipcode = e.target[4].value;
+                const dscp = e.target[5].value;
+
+                if(email.match(mailformat)){
+                    alert("Invalid Email id.");
+                    return
+                }
+                console.log(bag.items.length);
+                if(bag.items.length<=0){
+                    alert('Please choose any size from the options')
+                    return
+                }
+                const data = {
+                    fullname : full_name,
+                    email : email,
+                    address : full_address,
+                    zipcode : zipcode,
+                    phone : phone,
+                    order : {
+                        data : bag.items,
+                        dscp : dscp,
+                        orderPic : '/uploads/'
+                    }
+                }
+
+                const orderOptions = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json;charset=utf-8'
+                    },
+                    body: JSON.stringify(data)
+                }
+                const response = await fetch('/api/order/newOrder', orderOptions); 
+                const res = await response.json()
+                if(!res.success){
+                    alert(res.error)
+                }else{
+                    emptyBag();
+                    window.location.assign(`../order/?oid=${res.data._id}`)
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    </script>
+</body>
+</html>

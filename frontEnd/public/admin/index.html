@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Login</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>	
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/bootstrap-responsive.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <section id="typography">
+            <div style="display: flex;justify-content: space-between;align-items: center;" class="page-header">
+                <h1>Admin - Login</h1>
+                <div>
+                    <button onclick="forget()" type="button" class="btn btn-large btn-warning" name="addToTheBag" id="addToTheBag">Reset Password <i class="icon-user icon-white"></i></button>
+                    <button onclick="javascript:window.location.replace('../')" type="button" class="btn btn-large btn-primary">Home <i class="icon-home icon-white"></i></button>
+                </div>
+            </div>
+            <div style="display: flex;justify-content: center;" class="">
+                <form method="post" onsubmit="event.preventDefault();login(event)" class="block" style="max-width:350px;">
+                    <div class="form-group">
+                      <label for="orderEmail1">Email address</label>
+                      <input style="width:300px;" type="email" class="form-control" id="orderEmail1" aria-describedby="emailHelp" placeholder="Enter email" required><br>
+                      <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small><br/><br>
+                    </div>
+                    <div class="form-group">
+                      <label for="orderPassword1">Password</label>
+                      <input  style="width:300px;" type="password" class="form-control" id="orderPassword1" placeholder="Password" required minlength="5">
+                    </div><br>
+                    <div style="display: flex;justify-content: flex-end;" >
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div> 
+    <script>
+        window.onload = ()=>{
+            var token = checkToken()
+                if(token != null){
+                    window.location.assign('/admin/dashboard/')
+                }
+        }
+        function checkToken(){
+            return localStorage.getItem('authtoken')
+        }
+        async function login(e){
+            const mailformat = /^w+([.-]?w+)*@w+([.-]?w+)*(.w{2,3})+$/;
+
+            const email = e.target[0].value;
+            const password = e.target[1].value;
+
+            
+            if(email.match(mailformat)){
+                alert("Invalid Email id.");
+            }
+            const data = {
+                email : email,
+                password : password,
+            }
+            const loginOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify(data)
+            }
+            const response = await fetch('/api/auth/login', loginOptions); 
+            const res = await response.json()
+            if(!res.success){
+                alert(res.error)
+            }else{
+                // logged in 
+                if (res.authtoken){ 
+                    localStorage.setItem('authtoken', res.authtoken);
+                }
+                var token = checkToken()
+                if(token != null){
+                    window.location.assign('/admin/dashboard/')
+                }
+            }
+        }
+    </script>
+    <script src="../js/bootstrap.min.js"></script>  
+</body>
+</html>

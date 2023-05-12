@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - DesignMyWear</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>	
+    <link href="../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../css/bootstrap-responsive.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <section id="typography">
+            <div style="display: flex;justify-content: space-between;align-items: center;" class="page-header">
+                <h1>Admin - Dashboard</h1>
+                <div>
+                    <button onclick="logout()" type="button" class="btn btn-large btn-danger" name="addToTheBag" id="addToTheBag">Logout <i class="icon-user icon-white"></i></button>
+                </div>
+            </div>
+            <div style="margin: 0;" class="tabbable">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="#orders" data-toggle="tab"><h5 style="margin: 0;">Orders <span class="badge" style="background: #317eac;" id="orderCount">0</span></h5></a></li>				    
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="orders">
+                        <div class="row">	
+                            <div class="span3">
+                                <div class="well">
+                                    <ul style="margin: 0;" class="list-group" id="ordersList">
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="span9">
+                                <div id="orderDetails" class="well">
+                                    <div style="display: flex; align-items: center;">
+                                        <p><strong>#</strong></p>
+                                        <strong><p id="o_id"></p></strong>
+                                    </div>
+                                    <!-- Order deatils details -->
+                                    <h5>Order details:</h5>
+                                    <div style="padding-left: 1.2rem;">
+                                        <span style="display: flex; align-items: center;gap:0.2rem;">
+                                            <p><strong id="order_d">Order details</strong></p>
+                                        </span><br>
+                                        <table class="table" id="order_items">
+                                        </table>
+                                    </div>
+                                    <!-- Personal details -->
+                                    <h5>Personal details:</h5>
+                                    <div style="padding-left: 1.2rem;">
+                                        <span style="display: flex; align-items: center;gap:0.2rem;">
+                                            <p><strong>Full Name :</strong></p>
+                                            <p id="o_name"></p>
+                                        </span>
+                                        <span style="display: flex; align-items: center;gap:0.2rem;">
+                                            <p><strong>Address :</strong></p>
+                                            <p id="o_address"></p>
+                                        </span>
+                                        <span style="display: flex; align-items: center;gap:0.2rem;">
+                                            <p><strong>Zipcode :</strong></p>
+                                            <p id="o_zipcode"></p>
+                                        </span>
+                                        <span style="display: flex; align-items: center;gap:0.2rem;">
+                                            <p><strong>Phone :</strong></p>
+                                            <p id="o_phone"></p>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>	      
+                    </div>	
+<!--                 tab 2 -->
+                    <div class="tab-pane active" id="tab2">
+                        <div class="row">	
+                            <div class="span3">
+                                            
+                            </div>
+                            <div class="span9"></div>
+                        </div>	      
+                    </div>	
+                </div>
+              </div>	
+        </section>
+    </div>
+
+    <script src="../../js/bootstrap.min.js"></script>  
+    <script>
+        window.onload = ()=>{
+            let token = getToken()
+            if(!token){
+                window.location.assign('../')
+            }else{
+                getAllOrders()
+            }
+        }
+        function getToken(){
+            return localStorage.getItem("authtoken")
+        }
+
+        async function getAllOrders(){
+            try {
+                let response = await fetch("../../api/order/getAllOrders", { 
+                    method: "GET",
+                    headers: {
+                        "auth-token":getToken()
+                    }
+                });
+                let result = await response.json();
+                if(result.success){
+                    if(result.data){
+                        processOrderData(result.data)
+                    }else{
+                        alert(data.message)
+                    }
+                }else{
+                    alert("something went wrong")
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        function processOrderData(odata){
+            const data = odata;
+            let orderUL = document.getElementById("ordersList").innerHTML='';
+            document.getElementById("orderCount").innerText=data.length;
+            data.forEach(order => {
+                populateOrderListUl(order)
+            });
+        }
+
+        function populateOrderListUl(odata){
+            let orderUL = document.getElementById("ordersList");
+            let lielem = `<li onclick="getOrderDetailsById('${odata._id}')" style="cursor:pointer;" class="list-group-item">#${odata._id}</li>`
+            orderUL.innerHTML = lielem + orderUL.innerHTML;
+        }
+
+        async function getOrderDetailsById(o_id){
+            try {
+                let response = await fetch(`../../api/order/getOrderById/${o_id}`, { 
+                    method: "GET",
+                    headers: {
+                        "auth-token":getToken()
+                    }
+                });
+                let result = await response.json();
+                if(result.success){
+                    if(result.data){
+                        document.getElementById("o_id").innerText=result.data._id;
+                        document.getElementById("order_d").innerText=result.data.order_dscp;
+                        document.getElementById("o_name").innerText=result.data.fullname;
+                        document.getElementById("o_address").innerText=result.data.full_address;
+                        document.getElementById("o_phone").innerText=result.data.phone;
+                        document.getElementById("o_zipcode").innerText=result.data.zipcode;
+                        let items = '<tr><th><strong>Product Size</strong></th><th><strong>Quantity</strong></th></tr>'
+                        result.data.order_data.map((elem)=>{
+                            var key = Object.keys(elem)[0]
+                            items += `<tr>
+                                <td>${key}</td>
+                                <td>${elem[key]}</td>
+                            </tr>`
+                        })
+                        document.getElementById("order_items").innerHTML=''
+                        document.getElementById("order_items").innerHTML=items
+                    }else{
+                        alert(data.message)
+                    }
+                }else{
+                    alert("something went wrong")
+                }
+            } catch (error) {
+                alert("something went wrong");
+                console.error(error)
+            }
+        }
+
+        function populateDateDetails(order){
+            // objects
+        }
+        function logout(){
+            localStorage.removeItem('authtoken');
+            window.location.reload()
+        }
+    </script>
+</body>
+</html>
